@@ -4,78 +4,84 @@
 # import rospy
 import rclpy 
 from rclpy import node 
+from rclpy.node import Node
 from mavros_msgs.msg import PositionTarget
 from mavros_msgs.srv import CommandBool, SetMode
 # from pyquaternion import Quaternion
 
-from offboard.attitude_library import Attitude
+from attitude_library import Attitude
+# from offboard.attitude_library import Attitude
 # from offboard.setpoint_buffer import SetpointBuffer
 
 import time
 # import math
 import numpy as np
 
-class FlightModes():
+
+class FlightModes(Node):
 
     def __init__(self):
+        super().__init__('flight_modes')
         '''
         ROS Services
         '''
-        self.node = rclpy.create_node('flight_modes')
-        self.armService = self.node.create_client(CommandBool, 'mavros/cmd/arming')
-        self.flightModeService = self.node.create_client(SetMode, 'mavros/set_mode')
+        # self.node = rclpy.create_node('flight_modes')
+        self.armService = self.create_client(CommandBool, 'rogx_vision_mockup/mavros/cmd/arming')
+        self.flightModeService = self.create_client(SetMode, 'rogx_vision_mockup/mavros/set_mode')
         print('initialized')
 
     def arm(self):
         if not self.armService.service_is_ready():
-            self.node.get_logger().warn('Arm service is not available')
+            self.get_logger().warn('Arm service is not available')
             return False
         request = CommandBool.Request()
         request.value = True
         future = self.armService.call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
-        print('arm')
+        rclpy.spin_until_future_complete(self, future)
+        print('arm', future, future.result())
         if future.result() is not None and future.result().success:
             return True
         else:
-            self.node.get_logger().warn('Vehicle arming failed!')
+            self.get_logger().warn('Vehicle arming failed!')
             return False
 
     def disarm(self):
         if not self.armService.service_is_ready():
-            self.node.get_logger().warn('Disarm service is not available')
+            self.get_logger().warn('Disarm service is not available')
             return False
         print('disarm')
         request = CommandBool.Request()
         request.value = False
         future = self.armService.call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
+        rclpy.spin_until_future_complete(self, future, timeout_sec=1)
         if future.result() is not None and future.result().success:
             return True
         else:
-            self.node.get_logger().warn('Vehicle disarming failed!')
+            self.get_logger().warn('Vehicle disarming failed!')
             return False
 
     def offboard(self):
         if not self.flightModeService.service_is_ready():
-            self.node.get_logger().warn('Flight mode service is not available')
+            self.get_logger().warn('Flight mode service is not available')
             return False
-        print('offboard')
         request = SetMode.Request()
         request.custom_mode = 'OFFBOARD'
         future = self.flightModeService.call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
+        print('debugging offboard, the response is:', future, future.result())
+        rclpy.spin_until_future_complete(self, future)
         if future.result() is not None and future.result().mode_sent:
             return True
         else:
-            self.node.get_logger().warn('Vehicle Offboard failed')
+            self.get_logger().warn('Vehicle Offboard failed')
             return False
+        
 
 
-class Controller():
+
+class Controller(Node):
 
     def __init__(self):
-        # super().__init__('controller')
+        super().__init__('controller')
 
         self.attitude = Attitude()
         self.takeoff_height = 1.5 # m
@@ -87,7 +93,7 @@ class Controller():
         print('construct_target')
         target_raw_pose = PositionTarget()
         # target_raw_pose.header.stamp = rospy.Time.now()
-        target_raw_pose.header.stamp = self.get_clock().now()
+        target_raw_pose.header.stamp = self.get_clock().now().to_msg()
 
         target_raw_pose.coordinate_frame = 1      #FRAME_LOCAL_NED
 
@@ -107,7 +113,7 @@ class Controller():
         print('construct_target_velocity')
         target_raw_vel = PositionTarget()
         # target_raw_vel.header.stamp = rospy.Time.now()
-        target_raw_vel.header.stamp = self.get_clock().now()
+        target_raw_vel.header.stamp = self.get_clock().now().to_msg()
 
         target_raw_vel.coordinate_frame = 1      #FRAME_LOCAL_NED
 
