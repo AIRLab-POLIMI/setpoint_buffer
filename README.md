@@ -10,4 +10,4 @@ NOTE: The main issue is that when calling:
 ```
 ros2 service call /rogx_vision_mockup/mavros/cmd/arming mavros_msgs/srv/CommandBool '{value: True}' 
 ```
-it stucks there without any responce. Previously it was not the issue and calling was running smoothly
+it is stuck there without any responce. Previously it was not the issue and calling was running smoothly
