@@ -7,4 +7,7 @@ Here you will find three files required to start the drone:
 
 NOTE: There might be some slight issues with the translations from python/ros1 -> python/ros2 
 NOTE: The main issue is that when calling: 
-ros2 service call /rogx_vision_mockup/mavros/cmd/arming mavros_msgs/srv/CommandBool '{value: True}' it stucks there without any responce. Previously it was not the issue and calling was running smoothly
+```
+ros2 service call /rogx_vision_mockup/mavros/cmd/arming mavros_msgs/srv/CommandBool '{value: True}' 
+```
+it stucks there without any responce. Previously it was not the issue and calling was running smoothly
